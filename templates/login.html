@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-form">
+    <h2>登录法镜</h2>
+    <p class="demo-hint">演示版 · 点击下方按钮直接登录</p>
+    
+    <!-- 移除输入框，直接放登录按钮 -->
+    <button id="demoLoginBtn" class="btn btn-primary" style="width: 100%;">一键登录（演示）</button>
+    
+    <p style="margin-top: 2rem; font-size: 0.9rem; color: #666;">
+        正式版将支持邮箱/手机号登录
+    </p>
+</div>
+
+<script>
+document.getElementById('demoLoginBtn').addEventListener('click', function() {
+    // 演示版：直接跳转到首页，并标记为已登录
+    localStorage.setItem('fajing_logged_in', 'true');
+    window.location.href = '/';
+});
+</script>
+{% endblock %}

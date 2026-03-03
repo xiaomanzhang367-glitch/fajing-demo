@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 英雄区 -->
+<div class="hero">
+    <h1>以法为镜，以AI鉴真</h1>
+    <p class="slogan">法镜 · 广告合规智能检测平台</p>
+    <p class="sub-slogan">为中小企业和消费者提供快速、精准、可负担的广告合规检测服务</p>
+    <div class="hero-buttons">
+        <a href="/consumer" class="btn btn-primary">消费者入口 · 验真伪</a>
+        <a href="/merchant" class="btn btn-secondary">商家入口 · 避风险</a>
+    </div>
+</div>
+
+<!-- 核心功能 - 六个卡片 -->
+<div class="feature-grid">
+    <div class="feature-card">
+        <h3>三级风险标注</h3>
+        <p>红色A级（严重违规）、黄色B级（需资质）、绿色C级（建议优化），一目了然的风险分级。</p>
+    </div>
+    <div class="feature-card">
+        <h3>全文一键美化</h3>
+        <p>调用DeepSeek大模型对全文进行合规改写，保留原意，自动生成合规版本的广告文案。</p>
+    </div>
+    <div class="feature-card">
+        <h3>消费者验真</h3>
+        <p>上传广告截图或粘贴商品链接，快速识别虚假宣传，避免被误导购物。</p>
+    </div>
+    <div class="feature-card">
+        <h3>资质审核管理</h3>
+        <p>B级风险触发资质上传流程，支持证书在线提交与审核状态实时追踪。</p>
+    </div>
+    <div class="feature-card">
+        <h3>图片文字识别</h3>
+        <p>上传广告截图，自动提取图片中的文字内容进行合规检测，支持二维码/链接识别。</p>
+    </div>
+    <div class="feature-card">
+        <h3>专业检测报告</h3>
+        <p>一键生成PDF格式的合规检测报告，包含违规条款、法条依据与修改建议。</p>
+    </div>
+</div>
+
+<!-- 数据统计 -->
+<div class="stats-section">
+    <div class="stat-item">
+        <div class="stat-number">150+</div>
+        <div class="stat-label">禁用词库</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">12,345+</div>
+        <div class="stat-label">已检测文案</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">2,345+</div>
+        <div class="stat-label">拦截违规</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">98.5%</div>
+        <div class="stat-label">AI准确率</div>
+    </div>
+</div>
+
+<!-- 使用场景 -->
+<div class="scenario-section">
+    <h2>谁需要法镜？</h2>
+    <div class="scenario-grid">
+        <div class="scenario-card">
+            <h4>消费者</h4>
+            <p>购物前快速验证宣传真实性，避免被“全网第一”“100%有效”误导。</p>
+        </div>
+        <div class="scenario-card">
+            <h4>中小商家</h4>
+            <p>没有专职法务？AI帮你审核文案，远离高额罚款。</p>
+        </div>
+        <div class="scenario-card">
+            <h4>广告公司</h4>
+            <p>批量检测客户文案，提升交付质量，降低合规风险。</p>
+        </div>
+        <div class="scenario-card">
+            <h4>电商从业者</h4>
+            <p>详情页、直播话术、短视频文案，实时合规自查。</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

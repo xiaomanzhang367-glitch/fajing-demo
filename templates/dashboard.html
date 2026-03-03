@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="color: #64A386; font-size: 2.2rem; margin-bottom: 0.5rem;">法镜数据看板</h1>
+    <p style="color: #666; font-size: 1.1rem;">实时广告合规监测数据 · 每5秒刷新一次</p>
+</div>
+
+<!-- KPI 卡片 - 使用网格布局确保对齐 -->
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">今日检测</div>
+        <div style="font-size: 2.5rem; font-weight: bold; color: #64A386;" id="todayCount">0</div>
+        <div style="color: #38A169; font-size: 0.9rem; margin-top: 5px;">↑ 较昨日 +12.5%</div>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">累计检测</div>
+        <div style="font-size: 2.5rem; font-weight: bold; color: #64A386;" id="totalCount">0</div>
+        <div style="color: #64A386; font-size: 0.9rem; margin-top: 5px;">突破1.2万</div>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">拦截违规</div>
+        <div style="font-size: 2.5rem; font-weight: bold; color: #E53E3E;" id="blockedCount">0</div>
+        <div style="color: #E53E3E; font-size: 0.9rem; margin-top: 5px;">节省潜在罚款 350万</div>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="color: #666; font-size: 0.9rem; margin-bottom: 5px;">合规率</div>
+        <div style="font-size: 2.5rem; font-weight: bold; color: #38A169;" id="complianceRate">0%</div>
+        <div style="color: #38A169; font-size: 0.9rem; margin-top: 5px;">↑ 较上月 +5.2%</div>
+    </div>
+</div>
+
+<!-- 第一行图表 - 折线图和柱状图 -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+    <!-- 违规趋势折线图 -->
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="color: #2C3E50; margin: 0;">违规趋势 (近7天)</h3>
+            <div>
+                <span style="display: inline-block; width: 12px; height: 12px; background-color: #E53E3E; border-radius: 3px; margin-right: 5px;"></span>A级
+                <span style="display: inline-block; width: 12px; height: 12px; background-color: #DD6B20; border-radius: 3px; margin: 0 5px 0 15px;"></span>B级
+                <span style="display: inline-block; width: 12px; height: 12px; background-color: #38A169; border-radius: 3px; margin-left: 5px;"></span>C级
+            </div>
+        </div>
+        <canvas id="trendChart" style="width: 100%; height: 250px;"></canvas>
+    </div>
+    
+    <!-- 行业分布柱状图 -->
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <h3 style="color: #2C3E50; margin: 0 0 15px 0;">违规行业TOP5</h3>
+        <canvas id="industryChart" style="width: 100%; height: 250px;"></canvas>
+    </div>
+</div>
+
+<!-- 第二行图表 - 饼图和条形图 -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+    <!-- 风险等级分布饼图 -->
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <h3 style="color: #2C3E50; margin: 0 0 15px 0;">风险等级分布</h3>
+        <canvas id="riskPieChart" style="width: 100%; height: 250px;"></canvas>
+    </div>
+    
+    <!-- 时段检测热度条形图 -->
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <h3 style="color: #2C3E50; margin: 0 0 15px 0;">时段检测热度</h3>
+        <canvas id="hourlyChart" style="width: 100%; height: 250px;"></canvas>
+    </div>
+</div>
+
+<!-- 实时数据流 -->
+<div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="color: #2C3E50; margin: 0;">实时检测流</h3>
+        <div style="color: #64A386; font-size: 0.9rem;">⚡ 实时更新中</div>
+    </div>
+    <div id="realtimeStream" style="height: 100px; overflow: hidden; position: relative; background-color: #F9F9F9; border-radius: 8px; padding: 10px;">
+        <div id="streamContent" style="position: absolute; width: 100%; animation: scroll 15s linear infinite;">
+            <p style="margin: 8px 0; color: #666; border-bottom: 1px solid #eee; padding-bottom: 5px;">15:45:32 · 检测到A级违规词"国家级"</p>
+            <p style="margin: 8px 0; color: #666; border-bottom: 1px solid #eee; padding-bottom: 5px;">15:44:18 · 生成PDF报告 #FJ-20260303-023</p>
+            <p style="margin: 8px 0; color: #666; border-bottom: 1px solid #eee; padding-bottom: 5px;">15:42:55 · 商家端全文美化请求</p>
+            <p style="margin: 8px 0; color: #666; border-bottom: 1px solid #eee; padding-bottom: 5px;">15:41:09 · 消费者上传保健品广告截图</p>
+            <p style="margin: 8px 0; color: #666; border-bottom: 1px solid #eee; padding-bottom: 5px;">15:39:42 · 检测到B级词"专利"需资质</p>
+            <p style="margin: 8px 0; color: #666; border-bottom: 1px solid #eee; padding-bottom: 5px;">15:37:21 · 今日检测量突破600次</p>
+            <p style="margin: 8px 0; color: #666; border-bottom: 1px solid #eee; padding-bottom: 5px;">15:35:04 · 医疗美容行业违规率上升3%</p>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes scroll {
+    0% { top: 0; }
+    100% { top: -350px; }
+}
+
+/* 确保所有卡片都有正确的样式 */
+.stat-card, .chart-card {
+    transition: transform 0.2s;
+}
+.stat-card:hover, .chart-card:hover {
+    transform: translateY(-3px);
+}
+</style>
+
+<script>
+// 数字滚动动画
+function animateNumber(element, target, duration = 2000) {
+    let start = 0;
+    const increment = target / (duration / 16);
+    const timer = setInterval(() => {
+        start += increment;
+        if (start >= target) {
+            element.textContent = target.toLocaleString();
+            clearInterval(timer);
+        } else {
+            element.textContent = Math.floor(start).toLocaleString();
+        }
+    }, 16);
+}
+
+// 生成随机数据（实现刷新时变化的效果）
+function getRandomData(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// 页面加载和定时刷新
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化数据
+    updateAllData();
+    
+    // 每10秒刷新一次数据（模拟实时更新）
+    setInterval(updateAllData, 10000);
+});
+
+function updateAllData() {
+    // 随机生成KPI数据
+    const today = getRandomData(500, 650);
+    const total = 12345 + getRandomData(10, 50);
+    const blocked = 2345 + getRandomData(5, 20);
+    const rate = (98 + Math.random()).toFixed(1);
+    
+    animateNumber(document.getElementById('todayCount'), today, 1000);
+    animateNumber(document.getElementById('totalCount'), total, 1000);
+    animateNumber(document.getElementById('blockedCount'), blocked, 1000);
+    document.getElementById('complianceRate').textContent = rate + '%';
+    
+    // 更新图表
+    updateCharts();
+}
+
+function updateCharts() {
+    // 生成随机趋势数据
+    const trendA = Array(7).fill().map(() => getRandomData(8, 22));
+    const trendB = Array(7).fill().map(() => getRandomData(5, 18));
+    const trendC = Array(7).fill().map(() => getRandomData(3, 12));
+    
+    // 折线图
+    const ctx1 = document.getElementById('trendChart').getContext('2d');
+    if (window.trendChart) window.trendChart.destroy();
+    window.trendChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+            datasets: [
+                { label: 'A级', data: trendA, borderColor: '#E53E3E', backgroundColor: 'rgba(229,62,62,0.1)', tension: 0.4, fill: true },
+                { label: 'B级', data: trendB, borderColor: '#DD6B20', backgroundColor: 'rgba(221,107,32,0.1)', tension: 0.4, fill: true },
+                { label: 'C级', data: trendC, borderColor: '#38A169', backgroundColor: 'rgba(56,161,105,0.1)', tension: 0.4, fill: true }
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+    
+    // 柱状图
+    const ctx2 = document.getElementById('industryChart').getContext('2d');
+    if (window.industryChart) window.industryChart.destroy();
+    window.industryChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: ['医疗美容', '保健食品', '教育培训', '房地产', '金融理财'],
+            datasets: [{
+                data: [getRandomData(70, 95), getRandomData(60, 85), getRandomData(45, 70), getRandomData(35, 55), getRandomData(25, 40)],
+                backgroundColor: ['#E53E3E', '#DD6B20', '#38A169', '#64A386', '#BCDDBE'],
+                borderRadius: 8
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+    
+    // 饼图
+    const ctx3 = document.getElementById('riskPieChart').getContext('2d');
+    if (window.pieChart) window.pieChart.destroy();
+    window.pieChart = new Chart(ctx3, {
+        type: 'doughnut',
+        data: {
+            labels: ['A级严重违规', 'B级需资质', 'C级建议优化'],
+            datasets: [{
+                data: [getRandomData(30, 45), getRandomData(35, 50), getRandomData(15, 30)],
+                backgroundColor: ['#E53E3E', '#DD6B20', '#38A169'],
+                borderWidth: 0
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '60%' }
+    });
+    
+    // 时段热度条形图
+    const ctx4 = document.getElementById('hourlyChart').getContext('2d');
+    if (window.hourlyChart) window.hourlyChart.destroy();
+    window.hourlyChart = new Chart(ctx4, {
+        type: 'bar',
+        data: {
+            labels: ['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'],
+            datasets: [{
+                data: [getRandomData(20, 40), getRandomData(30, 50), getRandomData(70, 100), getRandomData(80, 110), getRandomData(60, 90), getRandomData(40, 70)],
+                backgroundColor: '#64A386',
+                borderRadius: 8
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+    
+    // 更新实时流内容
+    updateRealtimeStream();
+}
+
+function updateRealtimeStream() {
+    const streamDiv = document.getElementById('streamContent');
+    const times = ['15:', '14:', '13:', '12:', '11:', '10:'];
+    const minutes = [Math.floor(Math.random()*60), Math.floor(Math.random()*60), Math.floor(Math.random()*60), Math.floor(Math.random()*60), Math.floor(Math.random()*60), Math.floor(Math.random()*60)];
+    const messages = [
+        '检测到A级违规词"国家级"',
+        '生成PDF报告 #FJ-' + Date.now().toString().slice(-6),
+        '商家端全文美化请求',
+        '消费者上传' + (Math.random()>0.5?'化妆品':'保健品') + '广告截图',
+        '检测到B级词"专利"需资质',
+        '今日检测量突破' + getRandomData(500, 700) + '次',
+        '医疗美容行业违规率上升' + getRandomData(1, 5) + '%'
+    ];
+    
+    let html = '';
+    for (let i = 0; i < 7; i++) {
+        const hour = Math.floor(Math.random() * 12) + 8;
+        const minute = Math.floor(Math.random() * 60);
+        html += `<p style="margin: 8px 0; color: #666; border-bottom: 1px solid #eee; padding-bottom: 5px;">${hour}:${minute.toString().padStart(2,'0')} · ${messages[i % messages.length]}</p>`;
+    }
+    streamDiv.innerHTML = html;
+}
+</script>
+{% endblock %}

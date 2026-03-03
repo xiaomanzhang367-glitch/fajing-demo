@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>法镜 · 以法为镜，以AI鉴真</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- 添加 Chart.js 图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- 添加动画库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div style="display: flex; align-items: center;">
+                <!-- 正方形logo -->
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="法镜logo" style="width: 40px; height: 40px; margin-right: 10px; border-radius: 8px; object-fit: cover;">
+                <a href="/" class="logo">法镜</a>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">首页</a></li>
+                <li><a href="/consumer">消费者端</a></li>
+                <li><a href="/merchant">商家端</a></li>
+                <li><a href="/about">关于我们</a></li>
+                <li><a href="/dashboard-new">数据看板</a></li>
+                <!-- 登录状态会通过JavaScript动态显示 -->
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>© 2026 法镜 · 以法为镜，以AI鉴真 · 概念展示版</p>
+            <p>本工具检测结果仅供参考，不构成法律意见</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+    // 导航栏登录状态显示
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.getElementById('navLinks');
+        const isLoggedIn = localStorage.getItem('fajing_logged_in') === 'true';
+        
+        // 清空除了前5个固定链接以外的内容（首页、消费者、商家、关于、数据看板）
+        while (navLinks.children.length > 5) {
+            navLinks.removeChild(navLinks.lastChild);
+        }
+        
+        if (isLoggedIn) {
+            // 已登录状态
+            const li1 = document.createElement('li');
+            li1.innerHTML = '<a href="/dashboard" class="user-status">个人中心</a>';
+            navLinks.appendChild(li1);
+            
+            const li2 = document.createElement('li');
+            li2.innerHTML = '<a href="#" id="logoutBtn">退出</a>';
+            navLinks.appendChild(li2);
+            
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('fajing_logged_in');
+                window.location.href = '/';
+            });
+        } else {
+            // 未登录状态
+            const li1 = document.createElement('li');
+            li1.innerHTML = '<a href="/login">登录</a>';
+            navLinks.appendChild(li1);
+            
+            const li2 = document.createElement('li');
+            li2.innerHTML = '<a href="/register">注册</a>';
+            navLinks.appendChild(li2);
+        }
+    });
+    </script>
+</body>
+</html>

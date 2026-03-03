@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="detect-box">
+    <h2>商家端 · 避风险</h2>
+    
+    <!-- 文案输入区 -->
+    <textarea id="merchantText" placeholder="输入你的广告文案..." rows="5">我们的产品采用获得国家专利的技术，在多项测试中表现出良好效果，深受消费者信赖，市场表现优异。</textarea>
+    
+    <div style="display: flex; gap: 1rem; margin: 1rem 0;">
+        <button id="merchantDetectBtn" class="btn btn-primary" style="flex: 2;">检测风险</button>
+        <button id="fullImproveBtn" class="btn btn-secondary" style="flex: 1;">全文美化</button>
+    </div>
+    
+    <!-- 原文高亮显示区域 -->
+    <div id="highlightedText" class="highlight-box" style="display: none;">
+        <h3>检测结果（点击色块查看详情）</h3>
+        <div id="highlightContent" class="highlight-content"></div>
+    </div>
+    
+    <!-- 资质上传区域（动态显示） -->
+    <div id="qualificationArea" style="display: none; margin: 1rem 0; padding: 1rem; background-color: #FBFCCD; border-radius: 12px;">
+        <h3 style="color: #DD6B20; margin-bottom: 1rem;">需上传资质证明</h3>
+        <div id="qualificationList"></div>
+        <div style="margin-top: 1rem;">
+            <input type="file" id="qualificationFile" accept=".pdf,.jpg,.png" style="display: none;">
+            <button id="uploadQualificationBtn" class="btn btn-secondary">上传资质文件</button>
+            <span id="qualificationFileName" style="margin-left: 1rem; color: #666;"></span>
+        </div>
+        <div style="margin-top: 1rem;">
+            <button id="submitQualificationBtn" class="btn btn-primary">提交审核</button>
+            <button id="skipQualificationBtn" class="btn" style="background-color: #E53E3E; color: white; margin-left: 1rem;">没有资质，修改文案</button>
+        </div>
+    </div>
+    
+    <!-- 风险等级说明 -->
+    <div class="legend-box">
+        <div class="legend-item"><span class="legend-color level-A"></span> A级（严重违规）- 违反广告法禁止性规定，必须删除</div>
+        <div class="legend-item"><span class="legend-color level-B"></span> B级（需资质）- 需提供相关证明文件</div>
+        <div class="legend-item"><span class="legend-color level-C"></span> C级（建议优化）- 建议使用更合规的表述</div>
+    </div>
+</div>
+
+<!-- 弹出层 - 显示违规详情 -->
+<div id="popupOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;" onclick="closePopup()">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 2rem; border-radius: 16px; max-width: 400px; width: 90%;" onclick="event.stopPropagation()">
+        <h3 id="popupTitle" style="margin-bottom: 1rem;">违规详情</h3>
+        <p id="popupWord" style="font-weight: bold; color: #E53E3E; margin-bottom: 0.5rem;"></p>
+        <p id="popupLevel" style="margin-bottom: 0.5rem;"></p>
+        <p id="popupAdvice" style="margin-bottom: 1.5rem; background-color: #F5F5F5; padding: 1rem; border-radius: 8px;"></p>
+        <button onclick="closePopup()" class="btn btn-secondary" style="width: 100%;">关闭</button>
+    </div>
+</div>
+
+<script>
+let currentMatches = [];
+
+// 检测按钮
+document.getElementById('merchantDetectBtn').addEventListener('click', function() {
+    const text = document.getElementById('merchantText').value;
+    if (!text.trim()) {
+        alert('请输入文案');
+        return;
+    }
+    
+    fetch('/api/detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            renderHighlightedText(text, data.result);
+            checkBLevels(data.result);
+        }
+    })
+    .catch(err => alert('网络错误'));
+});
+
+// 全文美化按钮
+document.getElementById('fullImproveBtn').addEventListener('click', function() {
+    const text = document.getElementById('merchantText').value;
+    if (!text.trim()) {
+        alert('请输入文案');
+        return;
+    }
+    
+    fetch('/api/improve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            alert('优化失败：' + data.error);
+        } else {
+            document.getElementById('merchantText').value = data.improved;
+            alert('全文美化完成，请重新检测确认合规性');
+            // 美化完成后自动检测
+            setTimeout(() => {
+                document.getElementById('merchantDetectBtn').click();
+            }, 500);
+        }
+    })
+    .catch(err => alert('网络错误'));
+});
+
+// 原文高亮渲染
+function renderHighlightedText(originalText, sentences) {
+    const container = document.getElementById('highlightContent');
+    container.innerHTML = '';
+    currentMatches = [];
+    
+    // 收集所有匹配词
+    sentences.forEach(s => {
+        currentMatches = currentMatches.concat(s.matches);
+    });
+    
+    // 去重
+    const uniqueMatches = [];
+    const seen = new Set();
+    currentMatches.forEach(m => {
+        if (!seen.has(m.word)) {
+            seen.add(m.word);
+            uniqueMatches.push(m);
+        }
+    });
+    currentMatches = uniqueMatches;
+    
+    // 对原文进行高亮标记
+    let highlightedHtml = originalText;
+    
+    // 按长度降序排序，避免短词先匹配的问题
+    currentMatches.sort((a, b) => b.word.length - a.word.length);
+    
+    currentMatches.forEach(match => {
+        const word = match.word;
+        const level = match.level;
+        const color = level === 'A' ? '#E53E3E' : (level === 'B' ? '#DD6B20' : '#38A169');
+        const bgColor = level === 'A' ? '#FFE5E5' : (level === 'B' ? '#FFF3E0' : '#E8F5E8');
+        
+        // 创建可点击的高亮span
+        const span = `<span class="highlight-word level-${level}" style="background-color: ${bgColor}; color: ${color}; padding: 2px 4px; border-radius: 4px; cursor: pointer; font-weight: 500;" onclick="showPopup('${word}', '${level}')">${word}</span>`;
+        
+        // 替换所有匹配（使用正则全局替换）
+        const regex = new RegExp(word, 'g');
+        highlightedHtml = highlightedHtml.replace(regex, span);
+    });
+    
+    container.innerHTML = highlightedHtml;
+    document.getElementById('highlightedText').style.display = 'block';
+}
+
+// 检查B级风险
+function checkBLevels(sentences) {
+    const pendingBLevels = [];
+    sentences.forEach(item => {
+        item.matches.forEach(m => {
+            if (m.level === 'B' && !pendingBLevels.includes(m.word)) {
+                pendingBLevels.push(m.word);
+            }
+        });
+    });
+    
+    if (pendingBLevels.length > 0) {
+        const qualList = document.getElementById('qualificationList');
+        qualList.innerHTML = '<p>以下词汇需要资质证明：</p>';
+        pendingBLevels.forEach(word => {
+            qualList.innerHTML += `<p style="color: #DD6B20; margin: 0.5rem 0;">• ${word}</p>`;
+        });
+        document.getElementById('qualificationArea').style.display = 'block';
+    } else {
+        document.getElementById('qualificationArea').style.display = 'none';
+    }
+}
+
+// 弹出详情
+function showPopup(word, level) {
+    let advice = '';
+    let levelText = '';
+    
+    if (level === 'A') {
+        levelText = 'A级严重违规';
+        advice = '违反《广告法》第九条禁止使用绝对化用语的规定。建议立即删除该词汇，或使用客观描述替代。';
+    } else if (level === 'B') {
+        levelText = 'B级需资质证明';
+        advice = '使用该词汇需要提供相关资质证明文件（如专利证书、认证文件等）。请在下方上传资质，或修改文案。';
+    } else if (level === 'C') {
+        levelText = 'C级建议优化';
+        advice = '该表述可能存在误导倾向，建议使用更准确的描述，或提供数据支撑。';
+    }
+    
+    document.getElementById('popupWord').textContent = `违规词：${word}`;
+    document.getElementById('popupLevel').textContent = `风险等级：${levelText}`;
+    document.getElementById('popupAdvice').textContent = advice;
+    document.getElementById('popupOverlay').style.display = 'block';
+}
+
+function closePopup() {
+    document.getElementById('popupOverlay').style.display = 'none';
+}
+
+// 资质上传模拟
+document.getElementById('uploadQualificationBtn').addEventListener('click', function() {
+    document.getElementById('qualificationFile').click();
+});
+
+document.getElementById('qualificationFile').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+        document.getElementById('qualificationFileName').textContent = '已选择：' + e.target.files[0].name;
+    }
+});
+
+document.getElementById('submitQualificationBtn').addEventListener('click', function() {
+    const fileName = document.getElementById('qualificationFileName').textContent;
+    if (!fileName) {
+        alert('请先上传资质文件');
+        return;
+    }
+    alert('演示模式：资质已提交审核，审核通过后黄色标记将解除');
+    document.getElementById('qualificationArea').style.display = 'none';
+});
+
+document.getElementById('skipQualificationBtn').addEventListener('click', function() {
+    if (confirm('没有资质证明，建议修改文案。是否返回修改？')) {
+        document.getElementById('qualificationArea').style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

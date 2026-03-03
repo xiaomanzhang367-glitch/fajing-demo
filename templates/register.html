@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-form">
+    <h2>注册法镜</h2>
+    <p class="demo-hint">演示版 · 点击下方按钮直接注册并登录</p>
+    
+    <button id="demoRegisterBtn" class="btn btn-primary" style="width: 100%;">一键注册（演示）</button>
+    
+    <p style="margin-top: 2rem; font-size: 0.9rem; color: #666;">
+        已有账号？ <a href="/login">去登录</a>
+    </p>
+</div>
+
+<script>
+document.getElementById('demoRegisterBtn').addEventListener('click', function() {
+    // 演示版：直接跳转到首页，并标记为已登录
+    localStorage.setItem('fajing_logged_in', 'true');
+    window.location.href = '/';
+});
+</script>
+{% endblock %}

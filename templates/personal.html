@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+    <h1 style="color: #64A386; font-size: 2.2rem; margin-bottom: 10px;">个人中心</h1>
+    <p style="color: #666; margin-bottom: 30px;">欢迎回来，这里是你的法镜个人空间</p>
+    
+    <!-- 用户信息卡片 -->
+    <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 30px;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div style="width: 80px; height: 80px; background: #64A386; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2.5rem;">👤</div>
+            <div>
+                <h2 style="color: #2C3E50; margin-bottom: 5px;">法镜用户</h2>
+                <p style="color: #666;">注册时间：2026年1月15日</p>
+                <p style="color: #666;">会员等级：普通用户</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 使用统计 -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+        <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="color: #666; font-size: 0.9rem;">累计检测</div>
+            <div style="font-size: 2rem; font-weight: bold; color: #64A386;">156</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="color: #666; font-size: 0.9rem;">生成报告</div>
+            <div style="font-size: 2rem; font-weight: bold; color: #64A386;">43</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="color: #666; font-size: 0.9rem;">合规评分</div>
+            <div style="font-size: 2rem; font-weight: bold; color: #38A169;">92</div>
+        </div>
+    </div>
+    
+    <!-- 最近检测记录 -->
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 30px;">
+        <h3 style="color: #2C3E50; margin-bottom: 20px;">最近检测记录</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="border-bottom: 2px solid #BCDDBE;">
+                <th style="text-align: left; padding: 10px;">时间</th>
+                <th style="text-align: left; padding: 10px;">文案</th>
+                <th style="text-align: left; padding: 10px;">风险等级</th>
+                <th style="text-align: left; padding: 10px;">操作</th>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 12px 10px;">2026-03-03 15:30</td>
+                <td style="padding: 12px 10px;">我们的产品是国家级专利...</td>
+                <td style="padding: 12px 10px;"><span style="background: #E53E3E; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem;">A级</span> <span style="background: #DD6B20; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem;">B级</span></td>
+                <td style="padding: 12px 10px;"><button style="background: none; border: 1px solid #64A386; color: #64A386; padding: 5px 12px; border-radius: 20px; cursor: pointer;">查看报告</button></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 12px 10px;">2026-03-03 10:15</td>
+                <td style="padding: 12px 10px;">这款面膜采用独家专利技术...</td>
+                <td style="padding: 12px 10px;"><span style="background: #DD6B20; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem;">B级</span> <span style="background: #38A169; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem;">C级</span></td>
+                <td style="padding: 12px 10px;"><button style="background: none; border: 1px solid #64A386; color: #64A386; padding: 5px 12px; border-radius: 20px; cursor: pointer;">查看报告</button></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 12px 10px;">2026-03-02 16:45</td>
+                <td style="padding: 12px 10px;">行业第一品牌，销量遥遥领先...</td>
+                <td style="padding: 12px 10px;"><span style="background: #E53E3E; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem;">A级</span></td>
+                <td style="padding: 12px 10px;"><button style="background: none; border: 1px solid #64A386; color: #64A386; padding: 5px 12px; border-radius: 20px; cursor: pointer;">查看报告</button></td>
+            </tr>
+        </table>
+    </div>
+    
+    <!-- 我的资质 -->
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <h3 style="color: #2C3E50; margin-bottom: 20px;">我的资质</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+            <div style="padding: 15px; background: #F9F9F9; border-radius: 12px; display: flex; align-items: center; gap: 10px;">
+                <span style="width: 40px; height: 40px; background: #38A169; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">✓</span>
+                <div>
+                    <div style="font-weight: bold;">发明专利证书</div>
+                    <div style="color: #38A169; font-size: 0.9rem;">已审核通过</div>
+                </div>
+            </div>
+            <div style="padding: 15px; background: #F9F9F9; border-radius: 12px; display: flex; align-items: center; gap: 10px;">
+                <span style="width: 40px; height: 40px; background: #DD6B20; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">⏳</span>
+                <div>
+                    <div style="font-weight: bold;">ISO认证</div>
+                    <div style="color: #DD6B20; font-size: 0.9rem;">审核中</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 如果没有登录，自动跳转到首页
+if (!localStorage.getItem('fajing_logged_in')) {
+    window.location.href = '/';
+}
+</script>
+{% endblock %}

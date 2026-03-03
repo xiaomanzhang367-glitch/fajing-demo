@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="detect-box">
+    <h2>消费者端 · 验真伪</h2>
+    
+    <!-- 输入方式选择 -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+        <button id="textInputBtn" class="btn btn-primary" style="flex: 1;">粘贴文本/链接</button>
+        <button id="imageUploadBtn" class="btn btn-secondary" style="flex: 1;">上传截图</button>
+    </div>
+    
+    <!-- 文本输入模式 -->
+    <div id="textInputMode">
+        <textarea id="consumerText" placeholder="粘贴商品宣传文案或商品链接..." rows="5"></textarea>
+    </div>
+    
+    <!-- 图片上传模式（默认隐藏） -->
+    <div id="imageUploadMode" style="display: none;">
+        <div class="upload-area" id="uploadArea">
+            <p class="upload-icon">📷</p>
+            <p style="margin-bottom: 1rem; color: #64A386;">点击上传或拖拽图片</p>
+            <p style="font-size: 0.9rem; color: #999;">支持 JPG/PNG，系统将自动识别图片中的文字</p>
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            <button id="selectImageBtn" class="btn btn-secondary">选择图片</button>
+            <div id="imagePreview" style="margin-top: 1rem; display: none;">
+                <img id="previewImg" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                <p id="fileName" style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;"></p>
+            </div>
+        </div>
+    </div>
+    
+    <button id="consumerDetectBtn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">开始检测</button>
+    
+    <!-- 检测结果 - 原文高亮 -->
+    <div id="highlightedText" class="highlight-box" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3>检测结果（点击色块查看详情）</h3>
+            <button id="consumerDownloadPdfBtn" class="btn btn-secondary" style="padding: 0.5rem 1rem;">📄 下载PDF报告</button>
+        </div>
+        <div id="highlightContent" class="highlight-content"></div>
+    </div>
+    
+    <!-- 风险等级说明 -->
+    <div class="legend-box">
+        <div class="legend-item"><span class="legend-color level-A"></span> A级（严重违规）- 违反广告法，存在虚假宣传风险</div>
+        <div class="legend-item"><span class="legend-color level-B"></span> B级（需资质）- 需要相关证明文件</div>
+        <div class="legend-item"><span class="legend-color level-C"></span> C级（建议优化）- 表述不当，可能误导消费者</div>
+    </div>
+</div>
+
+<!-- 弹出层 - 显示违规详情 -->
+<div id="popupOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;" onclick="closePopup()">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 2rem; border-radius: 16px; max-width: 400px; width: 90%;" onclick="event.stopPropagation()">
+        <h3 id="popupTitle" style="margin-bottom: 1rem; color: #E53E3E;">违规详情</h3>
+        <p id="popupWord" style="font-weight: bold; margin-bottom: 0.5rem;"></p>
+        <p id="popupLevel" style="margin-bottom: 0.5rem;"></p>
+        <p id="popupAdvice" style="margin-bottom: 1.5rem; background-color: #F5F5F5; padding: 1rem; border-radius: 8px;"></p>
+        <button onclick="closePopup()" class="btn btn-secondary" style="width: 100%;">关闭</button>
+    </div>
+</div>
+
+<script>
+// 切换输入模式
+document.getElementById('textInputBtn').addEventListener('click', function() {
+    document.getElementById('textInputMode').style.display = 'block';
+    document.getElementById('imageUploadMode').style.display = 'none';
+    this.classList.add('btn-primary');
+    this.classList.remove('btn-secondary');
+    document.getElementById('imageUploadBtn').classList.add('btn-secondary');
+    document.getElementById('imageUploadBtn').classList.remove('btn-primary');
+});
+
+document.getElementById('imageUploadBtn').addEventListener('click', function() {
+    document.getElementById('textInputMode').style.display = 'none';
+    document.getElementById('imageUploadMode').style.display = 'block';
+    this.classList.add('btn-primary');
+    this.classList.remove('btn-secondary');
+    document.getElementById('textInputBtn').classList.add('btn-secondary');
+    document.getElementById('textInputBtn').classList.remove('btn-primary');
+});
+
+// 图片上传预览
+document.getElementById('selectImageBtn').addEventListener('click', function() {
+    document.getElementById('imageInput').click();
+});
+
+document.getElementById('imageInput').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        document.getElementById('fileName').textContent = '已选择：' + file.name;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// 拖拽上传
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.style.backgroundColor = '#E8F5E8';
+});
+
+uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.style.backgroundColor = '#F9F9F9';
+});
+
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.style.backgroundColor = '#F9F9F9';
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        document.getElementById('imageInput').files = files;
+        document.getElementById('fileName').textContent = '已选择：' + files[0].name;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(files[0]);
+    }
+});
+
+// 检测按钮
+document.getElementById('consumerDetectBtn').addEventListener('click', function() {
+    const mode = document.getElementById('textInputMode').style.display !== 'none' ? 'text' : 'image';
+    let text = '';
+    
+    if (mode === 'text') {
+        text = document.getElementById('consumerText').value;
+    } else {
+        const fileName = document.getElementById('fileName').textContent;
+        if (!fileName) {
+            alert('请先选择图片');
+            return;
+        }
+        // 模拟OCR识别结果 - 根据图片名返回不同文案
+        if (fileName.includes('化妆品')) {
+            text = '这款面膜采用独家专利技术，100%有效祛斑，是行业第一品牌。';
+        } else if (fileName.includes('保健品')) {
+            text = '国家级认证保健品，根治三高，无效退款，央视推荐品牌。';
+        } else {
+            text = '我们的产品采用国家级专利技术，100%有效，领导品牌，销量第一。';
+        }
+        alert('演示模式：模拟图片识别结果\n\n识别文字：' + text);
+    }
+    
+    if (!text.trim()) {
+        alert('请输入文案');
+        return;
+    }
+    
+    // 调用检测接口
+    fetch('/api/detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            renderHighlightedText(text, data.result);
+            // 保存检测结果用于PDF
+            window.lastDetectResult = {
+                text: text,
+                sentences: data.result,
+                timestamp: new Date().toLocaleString()
+            };
+        }
+    })
+    .catch(err => alert('网络错误'));
+});
+
+// 原文高亮渲染
+function renderHighlightedText(originalText, sentences) {
+    const container = document.getElementById('highlightContent');
+    container.innerHTML = '';
+    
+    // 收集所有匹配词
+    const allMatches = [];
+    sentences.forEach(s => {
+        allMatches.push(...s.matches);
+    });
+    
+    // 去重并按长度排序
+    const uniqueMatches = [];
+    const seen = new Set();
+    allMatches.forEach(m => {
+        if (!seen.has(m.word)) {
+            seen.add(m.word);
+            uniqueMatches.push(m);
+        }
+    });
+    uniqueMatches.sort((a, b) => b.word.length - a.word.length);
+    
+    // 对原文进行高亮标记
+    let highlightedHtml = originalText;
+    
+    uniqueMatches.forEach(match => {
+        const word = match.word;
+        const level = match.level;
+        const bgColor = level === 'A' ? '#FFE5E5' : (level === 'B' ? '#FFF3E0' : '#E8F5E8');
+        const textColor = level === 'A' ? '#E53E3E' : (level === 'B' ? '#DD6B20' : '#38A169');
+        
+        const span = `<span class="highlight-word level-${level}" style="background-color: ${bgColor}; color: ${textColor}; padding: 2px 4px; border-radius: 4px; cursor: pointer; font-weight: 500; border-bottom: 2px solid ${textColor};" onclick="showPopup('${word}', '${level}')">${word}</span>`;
+        
+        const regex = new RegExp(word, 'g');
+        highlightedHtml = highlightedHtml.replace(regex, span);
+    });
+    
+    container.innerHTML = highlightedHtml;
+    document.getElementById('highlightedText').style.display = 'block';
+}
+
+// 弹出详情
+function showPopup(word, level) {
+    let advice = '';
+    let levelText = '';
+    
+    if (level === 'A') {
+        levelText = 'A级严重违规';
+        advice = '违反《广告法》第九条禁止使用绝对化用语的规定。这类宣传容易误导消费者，建议谨慎对待该商品。';
+    } else if (level === 'B') {
+        levelText = 'B级需资质证明';
+        advice = '使用该词汇需要提供相关资质证明文件。建议向商家索要专利证书、认证文件等。';
+    } else if (level === 'C') {
+        levelText = 'C级建议优化';
+        advice = '该表述可能存在误导倾向，建议消费者理性看待，不要轻信夸大宣传。';
+    }
+    
+    document.getElementById('popupWord').textContent = `违规词：${word}`;
+    document.getElementById('popupLevel').textContent = `风险等级：${levelText}`;
+    document.getElementById('popupAdvice').textContent = advice;
+    document.getElementById('popupOverlay').style.display = 'block';
+}
+
+function closePopup() {
+    document.getElementById('popupOverlay').style.display = 'none';
+}
+</script>
+{% endblock %}
