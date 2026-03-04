@@ -55,36 +55,56 @@
         </div>
     </footer>
 
-    <!-- 悬浮球按钮 -->
+      <!-- 悬浮球按钮 -->
     <div id="floating-btn" class="floating-btn" style="position: fixed; bottom: 30px; right: 30px; z-index: 999;">
         <div style="width: 60px; height: 60px; background: #64A386; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; color: white; font-size: 30px;">
             ⚖️
         </div>
     </div>
 
-    <!-- 聊天窗口（默认隐藏） -->
-    <div id="chat-window" style="display: none; position: fixed; bottom: 100px; right: 30px; width: 380px; height: 600px; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1000; overflow: hidden; border: 1px solid #BCDDBE;">
-        <div style="background: #64A386; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+    <!-- 聊天窗口（默认隐藏）- 优化版 -->
+    <div id="chat-window" style="display: none; position: fixed; bottom: 100px; right: 30px; width: 350px; height: 500px; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1000; overflow: hidden; border: 1px solid #BCDDBE;">
+        <div style="background: #64A386; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: move;" id="chat-header">
             <span style="font-weight: bold;">法镜AI助手</span>
             <span id="close-chat" style="cursor: pointer; font-size: 20px;">×</span>
         </div>
-        <iframe src="https://yuanqi.tencent.com/webim/#/chat/PrVEcM?appid=2029041072013311104&experience=true" style="width: 100%; height: calc(100% - 50px); border: none;"></iframe>
+        <div style="height: calc(100% - 45px); width: 100%; overflow: hidden;">
+            <iframe src="https://yuanqi.tencent.com/webim/#/chat/PrVEcM?appid=2029041072013311104&experience=true" style="width: 100%; height: 100%; border: none; overflow: auto;"></iframe>
+        </div>
     </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <style>
+        /* 确保 iframe 内容自适应 */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            #chat-window {
+                width: 300px !important;
+                height: 450px !important;
+                bottom: 80px !important;
+                right: 15px !important;
+            }
+        }
+    </style>
+
     <script>
     // 导航栏登录状态显示
     document.addEventListener('DOMContentLoaded', function() {
         const navLinks = document.getElementById('navLinks');
         const isLoggedIn = localStorage.getItem('fajing_logged_in') === 'true';
         
-        // 清空除了前5个固定链接以外的内容（首页、消费者、商家、关于、数据看板）
         while (navLinks.children.length > 5) {
             navLinks.removeChild(navLinks.lastChild);
         }
         
         if (isLoggedIn) {
-            // 已登录状态
             const li1 = document.createElement('li');
             li1.innerHTML = '<a href="/dashboard" class="user-status">个人中心</a>';
             navLinks.appendChild(li1);
@@ -99,7 +119,6 @@
                 window.location.href = '/';
             });
         } else {
-            // 未登录状态
             const li1 = document.createElement('li');
             li1.innerHTML = '<a href="/login">登录</a>';
             navLinks.appendChild(li1);
@@ -117,6 +136,31 @@
     
     document.getElementById('close-chat').addEventListener('click', function() {
         document.getElementById('chat-window').style.display = 'none';
+    });
+
+    // 让聊天窗口可以拖动（可选）
+    const chatWindow = document.getElementById('chat-window');
+    const chatHeader = document.getElementById('chat-header');
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    chatHeader.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        offsetX = e.clientX - chatWindow.offsetLeft;
+        offsetY = e.clientY - chatWindow.offsetTop;
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (isDragging) {
+            chatWindow.style.left = (e.clientX - offsetX) + 'px';
+            chatWindow.style.top = (e.clientY - offsetY) + 'px';
+            chatWindow.style.bottom = 'auto';
+            chatWindow.style.right = 'auto';
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        isDragging = false;
     });
     </script>
 </body>
